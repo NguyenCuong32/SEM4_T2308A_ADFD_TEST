@@ -15,8 +15,12 @@ public class BtBeApplication {
     @Bean
     CommandLineRunner initData(PlaceRepository placeRepository) {
         return args -> {
+            placeRepository.save(new Place("Lao Cai", "https://your-image-url.com/hoian.jpg"));
             placeRepository.save(new Place("Hoi An", "https://your-image-url.com/hoian.jpg"));
             placeRepository.save(new Place("Sai Gon", "https://your-image-url.com/saigon.jpg"));
+            placeRepository.save(new Place("Thanh Hoa", "https://your-image-url.com/hoian.jpg"));
+            placeRepository.save(new Place("Hai Phong", "https://your-image-url.com/hoian.jpg"));
+            placeRepository.save(new Place("Hung Yen", "https://your-image-url.com/saigon.jpg"));
         };
     }
 
