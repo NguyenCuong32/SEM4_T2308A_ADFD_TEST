@@ -1,0 +1,10 @@
+INSERT INTO PLACE (name, description) VALUES ('Hạ Long Bay', 'Di sản thiên nhiên thế giới');
+INSERT INTO PLACE (name, description) VALUES ('Đà Nẵng', 'Thành phố đáng sống');
+INSERT INTO PLACE (name, description) VALUES ('Sapa', 'Thị trấn trong mây');
+INSERT INTO PLACE (name, description) VALUES ('Hội An', 'Phố cổ nổi tiếng');
+INSERT INTO PLACE (name, description) VALUES ('Nha Trang', 'Thành phố biển xinh đẹp');
+INSERT INTO PLACE (name, description) VALUES ('Huế', 'Cố đô lịch sử');
+INSERT INTO PLACE (name, description) VALUES ('Phú Quốc', 'Đảo ngọc của Việt Nam');
+INSERT INTO PLACE (name, description) VALUES ('Đà Lạt', 'Thành phố sương mù');
+INSERT INTO PLACE (name, description) VALUES ('Cần Thơ', 'Thành phố miền Tây sông nước');
+INSERT INTO PLACE (name, description) VALUES ('Quảng Bình', 'Nơi có động Phong Nha');
