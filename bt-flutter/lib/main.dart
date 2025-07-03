@@ -32,6 +32,7 @@ class _HomePageState extends State<HomePage> {
   late Future<List<Place>> _placesFuture;
   List<Place> _allPlaces = [];
   String _searchText = '';
+  int _selectedIndex = 0; // 0: Home, 1: Favorites
 
   @override
   void initState() {
@@ -48,6 +49,20 @@ class _HomePageState extends State<HomePage> {
         .where((place) =>
             place.name.toLowerCase().contains(_searchText.toLowerCase()))
         .toList();
+  }
+
+  List<Place> _favoritePlaces() {
+    return _allPlaces.where((place) => place.isFavorite).toList();
+  }
+
+  void _onTabTapped(int index) {
+    setState(() {
+      _selectedIndex = index;
+    });
+  }
+
+  void _onFavoriteChanged() {
+    setState(() {}); // Để cập nhật UI khi favorite thay đổi
   }
 
   @override
@@ -72,36 +87,38 @@ class _HomePageState extends State<HomePage> {
                   style: TextStyle(fontSize: 16, color: Colors.black54),
                 ),
                 const SizedBox(height: 16),
-                TextField(
-                  decoration: InputDecoration(
-                    hintText: 'Search your destination',
-                    prefixIcon: const Icon(Icons.search),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(16),
-                      borderSide: BorderSide.none,
+                if (_selectedIndex == 0)
+                  TextField(
+                    decoration: InputDecoration(
+                      hintText: 'Search your destination',
+                      prefixIcon: const Icon(Icons.search),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(16),
+                        borderSide: BorderSide.none,
+                      ),
+                      filled: true,
+                      fillColor: Colors.white,
                     ),
-                    filled: true,
-                    fillColor: Colors.white,
+                    onChanged: (value) {
+                      setState(() {
+                        _searchText = value;
+                      });
+                    },
                   ),
-                  onChanged: (value) {
-                    setState(() {
-                      _searchText = value;
-                    });
-                  },
-                ),
-                const SizedBox(height: 24),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    _HomeButton(icon: Icons.hotel, label: 'Hotels'),
-                    _HomeButton(icon: Icons.flight, label: 'Flights'),
-                    _HomeButton(icon: Icons.apps, label: 'All'),
-                  ],
-                ),
+                if (_selectedIndex == 0) const SizedBox(height: 24),
+                if (_selectedIndex == 0)
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      _HomeButton(icon: Icons.hotel, label: 'Hotels'),
+                      _HomeButton(icon: Icons.flight, label: 'Flights'),
+                      _HomeButton(icon: Icons.apps, label: 'All'),
+                    ],
+                  ),
                 const SizedBox(height: 32),
-                const Text(
-                  'Popular Destinations',
-                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                Text(
+                  _selectedIndex == 0 ? 'Popular Destinations' : 'Favorites',
+                  style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 16),
                 SizedBox(
@@ -116,21 +133,28 @@ class _HomePageState extends State<HomePage> {
                       } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
                         return const Center(child: Text('No destinations found.'));
                       }
-                      // Cập nhật _allPlaces nếu chưa có
                       if (_allPlaces.isEmpty) {
                         _allPlaces = snapshot.data!;
                       }
-                      final filteredPlaces = _filterPlaces();
-                      if (filteredPlaces.isEmpty) {
-                        return const Center(child: Text('No destinations match your search.'));
+                      final places = _selectedIndex == 0
+                          ? _filterPlaces()
+                          : _favoritePlaces();
+                      if (places.isEmpty) {
+                        return Center(
+                            child: Text(_selectedIndex == 0
+                                ? 'No destinations match your search.'
+                                : 'No favorites yet.'));
                       }
                       return ListView.separated(
                         scrollDirection: Axis.horizontal,
-                        itemCount: filteredPlaces.length,
+                        itemCount: places.length,
                         separatorBuilder: (context, index) => const SizedBox(width: 16),
                         itemBuilder: (context, index) {
-                          final place = filteredPlaces[index];
-                          return _PlaceCard(place: place);
+                          final place = places[index];
+                          return _PlaceCard(
+                            place: place,
+                            onFavoriteChanged: _onFavoriteChanged,
+                          );
                         },
                       );
                     },
@@ -147,8 +171,8 @@ class _HomePageState extends State<HomePage> {
           BottomNavigationBarItem(icon: Icon(Icons.favorite), label: 'FAVORITES'),
           BottomNavigationBarItem(icon: Icon(Icons.person), label: 'PROFILE'),
         ],
-        currentIndex: 0,
-        onTap: (index) {},
+        currentIndex: _selectedIndex,
+        onTap: _onTabTapped,
       ),
     );
   }
@@ -187,9 +211,33 @@ class _HomeButton extends StatelessWidget {
   }
 }
 
-class _PlaceCard extends StatelessWidget {
+class _PlaceCard extends StatefulWidget {
   final Place place;
-  const _PlaceCard({required this.place});
+  final VoidCallback? onFavoriteChanged;
+  const _PlaceCard({required this.place, this.onFavoriteChanged});
+
+  @override
+  State<_PlaceCard> createState() => _PlaceCardState();
+}
+
+class _PlaceCardState extends State<_PlaceCard> {
+  late bool isFavorite;
+
+  @override
+  void initState() {
+    super.initState();
+    isFavorite = widget.place.isFavorite;
+  }
+
+  void toggleFavorite() {
+    setState(() {
+      isFavorite = !isFavorite;
+      widget.place.isFavorite = isFavorite;
+      if (widget.onFavoriteChanged != null) {
+        widget.onFavoriteChanged!();
+      }
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -215,7 +263,7 @@ class _PlaceCard extends StatelessWidget {
               topRight: Radius.circular(16),
             ),
             child: Image.network(
-              place.imageUrl,
+              widget.place.imageUrl,
               height: 100,
               width: 140,
               fit: BoxFit.cover,
@@ -234,12 +282,18 @@ class _PlaceCard extends StatelessWidget {
               children: [
                 Expanded(
                   child: Text(
-                    place.name,
+                    widget.place.name,
                     style: const TextStyle(fontWeight: FontWeight.bold),
                     overflow: TextOverflow.ellipsis,
                   ),
                 ),
-                Icon(Icons.favorite_border, color: Colors.red[300]),
+                GestureDetector(
+                  onTap: toggleFavorite,
+                  child: Icon(
+                    isFavorite ? Icons.favorite : Icons.favorite_border,
+                    color: isFavorite ? Colors.red : Colors.red[300],
+                  ),
+                ),
               ],
             ),
           ),
