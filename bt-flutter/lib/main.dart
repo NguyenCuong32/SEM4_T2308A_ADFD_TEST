@@ -30,11 +30,24 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   late Future<List<Place>> _placesFuture;
+  List<Place> _allPlaces = [];
+  String _searchText = '';
 
   @override
   void initState() {
     super.initState();
-    _placesFuture = PlaceService.fetchPlaces();
+    _placesFuture = PlaceService.fetchPlaces().then((places) {
+      _allPlaces = places;
+      return places;
+    });
+  }
+
+  List<Place> _filterPlaces() {
+    if (_searchText.isEmpty) return _allPlaces;
+    return _allPlaces
+        .where((place) =>
+            place.name.toLowerCase().contains(_searchText.toLowerCase()))
+        .toList();
   }
 
   @override
@@ -70,6 +83,11 @@ class _HomePageState extends State<HomePage> {
                     filled: true,
                     fillColor: Colors.white,
                   ),
+                  onChanged: (value) {
+                    setState(() {
+                      _searchText = value;
+                    });
+                  },
                 ),
                 const SizedBox(height: 24),
                 Row(
@@ -98,13 +116,20 @@ class _HomePageState extends State<HomePage> {
                       } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
                         return const Center(child: Text('No destinations found.'));
                       }
-                      final places = snapshot.data!;
+                      // Cập nhật _allPlaces nếu chưa có
+                      if (_allPlaces.isEmpty) {
+                        _allPlaces = snapshot.data!;
+                      }
+                      final filteredPlaces = _filterPlaces();
+                      if (filteredPlaces.isEmpty) {
+                        return const Center(child: Text('No destinations match your search.'));
+                      }
                       return ListView.separated(
                         scrollDirection: Axis.horizontal,
-                        itemCount: places.length,
+                        itemCount: filteredPlaces.length,
                         separatorBuilder: (context, index) => const SizedBox(width: 16),
                         itemBuilder: (context, index) {
-                          final place = places[index];
+                          final place = filteredPlaces[index];
                           return _PlaceCard(place: place);
                         },
                       );
