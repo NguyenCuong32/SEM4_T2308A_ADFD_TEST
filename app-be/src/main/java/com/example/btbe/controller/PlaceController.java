@@ -1,10 +1,15 @@
-package com.example.btbe;
+package com.example.btbe.controller;
 
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+
+import com.example.btbe.PlaceService;
+
 import java.util.List;
 import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 
 @RestController
 @RequestMapping("/api/places")
@@ -19,5 +24,10 @@ public class PlaceController {
     @GetMapping
     public List<Place> getAllPlaces() {
         return placeService.getAllPlaces();
+    }
+
+    @PostMapping
+    public Place addPlace(@RequestBody Place place) {
+        return placeService.addPlace(place);
     }
 } 

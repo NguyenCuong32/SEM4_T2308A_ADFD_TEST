@@ -1,8 +1,8 @@
 package com.example.btbe;
 
+import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
 
 @SpringBootApplication
@@ -15,8 +15,8 @@ public class BtBeApplication {
     @Bean
     CommandLineRunner initData(PlaceRepository placeRepository) {
         return args -> {
-            placeRepository.save(new Place("Hoi An", "https://your-image-url.com/hoian.jpg"));
-            placeRepository.save(new Place("Sai Gon", "https://your-image-url.com/saigon.jpg"));
+            placeRepository.save(new Place("hàn quốc", "https://your-image-url.com/hoian.jpg"));
+            placeRepository.save(new Place("nhật bản", "https://your-image-url.com/saigon.jpg"));
         };
     }
 

@@ -30,11 +30,32 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   late Future<List<Place>> _placesFuture;
+  final TextEditingController _searchController = TextEditingController();
+  List<Place> _allPlaces = [];
+  List<Place> _filteredPlaces = [];
 
   @override
   void initState() {
     super.initState();
     _placesFuture = PlaceService.fetchPlaces();
+    _placesFuture.then((places) {
+      setState(() {
+        _allPlaces = places;
+        _filteredPlaces = places;
+      });
+    });
+  }
+
+  void _filterPlaces(String query) {
+    setState(() {
+      if (query.isEmpty) {
+        _filteredPlaces = _allPlaces;
+      } else {
+        _filteredPlaces = _allPlaces
+            .where((place) => place.name.toLowerCase().contains(query.toLowerCase()))
+            .toList();
+      }
+    });
   }
 
   @override
@@ -50,16 +71,13 @@ class _HomePageState extends State<HomePage> {
               children: [
                 const SizedBox(height: 16),
                 const Text(
-                  'Hi Guy!',
-                  style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: Colors.deepPurple),
-                ),
-                const SizedBox(height: 8),
-                const Text(
                   'Where are you going next?',
                   style: TextStyle(fontSize: 16, color: Colors.black54),
                 ),
                 const SizedBox(height: 16),
                 TextField(
+                  controller: _searchController,
+                  onChanged: _filterPlaces,
                   decoration: InputDecoration(
                     hintText: 'Search your destination',
                     prefixIcon: const Icon(Icons.search),
@@ -72,15 +90,6 @@ class _HomePageState extends State<HomePage> {
                   ),
                 ),
                 const SizedBox(height: 24),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    _HomeButton(icon: Icons.hotel, label: 'Hotels'),
-                    _HomeButton(icon: Icons.flight, label: 'Flights'),
-                    _HomeButton(icon: Icons.apps, label: 'All'),
-                  ],
-                ),
-                const SizedBox(height: 32),
                 const Text(
                   'Popular Destinations',
                   style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
@@ -95,10 +104,13 @@ class _HomePageState extends State<HomePage> {
                         return const Center(child: CircularProgressIndicator());
                       } else if (snapshot.hasError) {
                         return Center(child: Text('Error: \\${snapshot.error}'));
-                      } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                      } else if (!_allPlaces.isNotEmpty) {
                         return const Center(child: Text('No destinations found.'));
                       }
-                      final places = snapshot.data!;
+                      final places = _filteredPlaces;
+                      if (places.isEmpty) {
+                        return const Center(child: Text('No destinations found.'));
+                      }
                       return ListView.separated(
                         scrollDirection: Axis.horizontal,
                         itemCount: places.length,
@@ -126,6 +138,12 @@ class _HomePageState extends State<HomePage> {
         onTap: (index) {},
       ),
     );
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
   }
 }
 
